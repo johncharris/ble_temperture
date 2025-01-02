@@ -1,4 +1,4 @@
-package com.example.ble_temperture
+package net.ziatech.ble_dryblock
 
 import io.flutter.embedding.android.FlutterActivity
 

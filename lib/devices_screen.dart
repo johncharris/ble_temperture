@@ -1,6 +1,8 @@
 import 'package:ble_temperture/device_screen.dart';
 import 'package:ble_temperture/permission_handler.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:universal_ble/universal_ble.dart';
 
 class DevicesScreen extends StatefulWidget {
@@ -30,6 +32,11 @@ class _DevicesScreenState extends State<DevicesScreen> {
         });
       };
 
+      UniversalBle.onQueueUpdate = (queueUpdate, bleDevice) {
+        addMessage(bleDevice.toString());
+        addMessage(queueUpdate.toString());
+      };
+
       // UniversalBle.startScan();
       startScan();
     } catch (e) {
@@ -40,13 +47,14 @@ class _DevicesScreenState extends State<DevicesScreen> {
 
   startScan() async {
     bool hasPermission = await PermissionHandler.arePermissionsGranted();
+    var bluetoothPermission = await Permission.bluetooth.request();
 
-    setState(() {
-      message += "\n$hasPermission";
-    });
+    addMessage("Bluetooth Permission: $bluetoothPermission");
+    addMessage("Has Permission: $hasPermission");
     if (hasPermission) {
+      await UniversalBle.stopScan();
       addMessage("Starting Scan");
-      UniversalBle.startScan();
+      await UniversalBle.startScan();
     }
   }
 
@@ -61,12 +69,9 @@ class _DevicesScreenState extends State<DevicesScreen> {
     return Scaffold(
         appBar: AppBar(
           title: const Text("Select Device"),
+          actions: [IconButton(onPressed: () => startScan(), icon: const Icon(Icons.refresh))],
         ),
         body: Column(children: [
-          SizedBox(
-            height: 300,
-            child: Text(message),
-          ),
           Expanded(
             child: ListView.builder(
                 itemCount: devices.length,
@@ -74,11 +79,25 @@ class _DevicesScreenState extends State<DevicesScreen> {
                   final device = devices[index];
                   return ListTile(
                     title: Text(device.name ?? device.deviceId),
-                    onTap: () =>
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => DeviceScreen(device: device))),
+                    onTap: () async {
+                      await UniversalBle.stopScan();
+                      if (!context.mounted) return;
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => DeviceScreen(device: device)));
+                    },
                   );
                 }),
-          )
+          ),
+          FutureBuilder(
+              future: PackageInfo.fromPlatform(),
+              builder: (context, snapshot) => Container(
+                    alignment: Alignment.bottomCenter,
+                    child: Card(
+                        color: Colors.white.withAlpha(128),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text("Version: ${snapshot.data?.version ?? ""}"),
+                        )),
+                  ))
         ]));
   }
 }

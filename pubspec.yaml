@@ -2,7 +2,7 @@ name: ble_temperture
 description: "A new Flutter project."
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+1
+version: 1.0.11+11
 
 environment:
   sdk: '>=3.4.4 <4.0.0'
@@ -10,10 +10,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  universal_ble: 
-    path: ../universal_ble
+  universal_ble: ^0.14.0
+    # path: ../universal_ble
   permission_handler: ^11.3.1
   device_info_plus: ^11.1.0
+  package_info_plus: ^8.1.0
 
 dev_dependencies:
   flutter_test:

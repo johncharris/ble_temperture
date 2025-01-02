@@ -13,8 +13,8 @@ class DeviceScreen extends StatefulWidget {
 }
 
 class _DeviceScreenState extends State<DeviceScreen> {
-  double temperature = 0;
-  bool useCelcius = true;
+  double? temperature;
+  bool useCelcius = false;
 
   @override
   void initState() {
@@ -23,8 +23,13 @@ class _DeviceScreenState extends State<DeviceScreen> {
   }
 
   Future readValue() async {
+    UniversalBle.onConnectionChange = (String deviceId, bool isConnected, String? error) {
+      debugPrint('OnConnectionChange $deviceId, $isConnected Error: $error');
+    };
+
+    await UniversalBle.connect(widget.device.deviceId);
     UniversalBle.onValueChange = (String deviceId, String characteristicId, Uint8List value) {
-      if (deviceId == widget.device.deviceId) {
+      if (context.mounted && deviceId == widget.device.deviceId) {
         setState(() {
           temperature = _bytesToFloat(value);
         });
@@ -63,7 +68,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
       body: FittedBox(
           fit: BoxFit.contain,
           child: Text(
-            _getTemperature(temperature),
+            temperature == null ? '----' : _getTemperature(temperature!),
             style: const TextStyle(fontSize: 1000),
           )),
     );
